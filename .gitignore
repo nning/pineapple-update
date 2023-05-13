@@ -1,3 +1,4 @@
 *.AppImage
 pineapple-update
 pineapple-update.yml
+.pineapple-update.yml

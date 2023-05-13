@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -27,8 +28,32 @@ type Config struct {
 }
 
 func main() {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.Chdir(filepath.Dir(ex))
+	if err != nil {
+		panic(err)
+	}
+
+	configs := []string{
+		".pineapple-update.yml",
+		"pineapple-update.yml",
+	}
+
+	// check if config file exists
+	var configPath string
+	for _, c := range configs {
+		if _, err := os.Lstat(c); err == nil {
+			configPath = c
+			break
+		}
+	}
+
 	config := Config{}
-	configFile, err := ioutil.ReadFile("pineapple-update.yml")
+	configFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		panic(err)
 	}

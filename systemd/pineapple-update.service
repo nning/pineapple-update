@@ -1,0 +1,5 @@
+[Unit]
+Description=Update pineapple EA
+
+[Service]
+ExecStart=/home/deck/Applications/pineapple-update

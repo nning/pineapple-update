@@ -22,10 +22,12 @@ type Release struct {
 }
 
 type Config struct {
-	ReleaseURL     string `yaml:"releaseUrl"`
-	TargetFolder   string `yaml:"targetFolder"`
-	TargetFileName string `yaml:"targetFileName"`
+	TargetFolder    string `yaml:"targetFolder"`
+	Symlink         string `yaml:"symlink"`
+	SymlinkFileName string `yaml:"symlinkFileName"`
 }
+
+const releaseUrl = "https://api.github.com/repos/pineappleEA/pineapple-src/releases/latest"
 
 func main() {
 	ex, err := os.Executable()
@@ -53,17 +55,19 @@ func main() {
 	}
 
 	config := Config{}
-	configFile, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		panic(err)
+	if configPath != "" {
+		configFile, err := ioutil.ReadFile(configPath)
+		if err != nil {
+			panic(err)
+		}
+
+		err = yaml.Unmarshal(configFile, &config)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	err = yaml.Unmarshal(configFile, &config)
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := http.Get(config.ReleaseURL)
+	resp, err := http.Get(releaseUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +85,7 @@ func main() {
 	}
 
 	if len(release.Assets) == 0 {
-		panic("no assets")
+		panic("release does not contain any assets")
 	}
 
 	var asset Asset
@@ -123,12 +127,17 @@ func main() {
 
 	fmt.Println("downloaded " + asset.Name)
 
-	if config.TargetFileName != "" {
-		if _, err := os.Lstat(config.TargetFileName); err == nil {
-			os.Remove(config.TargetFileName)
+	if config.Symlink != "false" {
+		symlinkTarget := config.SymlinkFileName
+		if symlinkTarget == "" {
+			symlinkTarget = "yuzu-ea.AppImage"
 		}
 
-		err = os.Symlink(asset.Name, config.TargetFileName)
+		if _, err := os.Lstat(symlinkTarget); err == nil {
+			os.Remove(symlinkTarget)
+		}
+
+		err = os.Symlink(asset.Name, symlinkTarget)
 		if err != nil {
 			panic(err)
 		}

@@ -16,9 +16,11 @@ If you want to override this behaviour, copy `pineapple-update.example.yml` to
 `.pineapple-update.yml` or `pineapple-update.yml`. Available options are:
 
 - `targetFolder`: The folder where the AppImage files will be downloaded to.
-- `symlink`: Controls whether a symlink will be created. Set to `false` to
-  disable.
+- `symlink`: Controls whether a symlink will be created. Enabled by default, set
+  to `false` to disable.
 - `symlinkName`: The name of the symlink. (Default is `yuzu-ea.AppImage`)
+- `removeOldVersions`: Controls whether old versions are deleted. Enabled by
+  default, set to `false` to disable.
 
 ## Automatic Updates
 

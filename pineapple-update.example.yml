@@ -2,3 +2,5 @@
 
 # symlink: false
 # symlinkFileName: yuzu-ea.AppImage
+
+# removeOldVersions: false

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,9 +22,10 @@ type Release struct {
 }
 
 type Config struct {
-	TargetFolder    string `yaml:"targetFolder"`
-	Symlink         string `yaml:"symlink"`
-	SymlinkFileName string `yaml:"symlinkFileName"`
+	TargetFolder      string `yaml:"targetFolder"`
+	Symlink           string `yaml:"symlink"`
+	SymlinkFileName   string `yaml:"symlinkFileName"`
+	RemoveOldVersions string `yaml:"removeOldVersions"`
 }
 
 const releaseUrl = "https://api.github.com/repos/pineappleEA/pineapple-src/releases/latest"
@@ -56,7 +57,7 @@ func main() {
 
 	config := Config{}
 	if configPath != "" {
-		configFile, err := ioutil.ReadFile(configPath)
+		configFile, err := os.ReadFile(configPath)
 		if err != nil {
 			panic(err)
 		}
@@ -73,7 +74,7 @@ func main() {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
@@ -103,9 +104,12 @@ func main() {
 		}
 	}
 
-	_, err = ioutil.ReadFile(asset.Name)
+	_, err = os.ReadFile(asset.Name)
 	if err == nil {
 		fmt.Println("already up to date")
+		if config.RemoveOldVersions != "false" {
+			goto cleanup
+		}
 		return
 	}
 
@@ -115,18 +119,19 @@ func main() {
 	}
 	defer resp.Body.Close()
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(asset.Name, body, 0755)
+	err = os.WriteFile(asset.Name, body, 0755)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("downloaded " + asset.Name)
 
+cleanup:
 	if config.Symlink != "false" {
 		symlinkTarget := config.SymlinkFileName
 		if symlinkTarget == "" {
@@ -140,6 +145,24 @@ func main() {
 		err = os.Symlink(asset.Name, symlinkTarget)
 		if err != nil {
 			panic(err)
+		}
+	}
+
+	if config.RemoveOldVersions != "false" {
+		files, err := os.ReadDir(".")
+		if err != nil {
+			panic(err)
+		}
+
+		for _, f := range files {
+			if strings.HasPrefix(f.Name(), "Linux-Yuzu-EA-") && strings.HasSuffix(f.Name(), ".AppImage") && f.Name() != asset.Name {
+				err = os.Remove(f.Name())
+				if err != nil {
+					panic(err)
+				}
+
+				fmt.Println("removed " + f.Name())
+			}
 		}
 	}
 }

@@ -2,4 +2,4 @@
 Description=Update pineapple EA
 
 [Service]
-ExecStart=/home/deck/Applications/pineapple-update
+ExecStart=%h/.local/bin/pineapple-update

@@ -41,9 +41,12 @@ func main() {
 		panic(err)
 	}
 
+	homedir, _ := os.UserHomeDir()
+
 	configs := []string{
-		".pineapple-update.yml",
 		"pineapple-update.yml",
+		".pineapple-update.yml",
+		filepath.Join(homedir, ".config", "pineapple-update.yml"),
 	}
 
 	// check if config file exists

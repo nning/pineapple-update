@@ -15,3 +15,10 @@ clean:
 release: GOLDFLAGS += -s -w
 release: GOFLAGS += -trimpath -buildmode=pie -mod=readonly -modcacherw
 release: $(BIN)
+
+install: release
+	install -Dm755 $(BIN) ~/.local/bin/$(BIN)
+	cp -n pineapple-update.example.yml ~/.config/pineapple-update.yml || true
+	mkdir -p ~/.config/systemd/user
+	cp -n systemd/pineapple-update.service ~/.config/systemd/user/pineapple-update.service || true
+	cp -n systemd/pineapple-update.timer ~/.config/systemd/user/pineapple-update.timer || true
